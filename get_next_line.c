@@ -6,7 +6,7 @@
 /*   By: iusantos <iusantos@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/01 10:46:33 by iusantos          #+#    #+#             */
-/*   Updated: 2023/06/01 15:09:47 by iusantos         ###   ########.fr       */
+/*   Updated: 2023/06/01 17:11:25 by iusantos         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ t_node	*new_data_node(void)
 	new_node_ptr = (t_node *) malloc(sizeof(t_node));
 	if (!new_node_ptr)
 		return NULL;
-	new_node_ptr->content = (char *)malloc(BUFFER_SIZE+1);
+	new_node_ptr->content = (char *)malloc(BUFFER_SIZE + 1);
 	new_node_ptr->next = NULL;
 	return (new_node_ptr);
 }
@@ -40,29 +40,34 @@ void	node_addback(t_node **head, t_node *new)
 	last->next = new;
 }
 
-int	check_for_newline(t_node **head)
+// -1 if there is no newline. If found, return index on last node's content.
+int	find_next_newline(t_node **head)
 {
 	t_node	*node;
 	int	counter;
 
 	node = *head;
 	if (*head == NULL)
-		return (0);
+		return (-1);
 	while (1)
 	{
 		counter = 0;
 		while (node->content[counter] != '\0')
 		{
 			if (node->content[counter] == '\n')
-				return (1);
+			{
+				node->content = &(node->content[counter]);
+				return (counter);
+			}
 			counter++;
 		}
 		if (node->next == NULL)
 			break;
 		node = node->next;
 	}
-	return (0);
+	return (-1);
 }
+
 
 char	*get_next_line(int fd)
 {
@@ -75,12 +80,14 @@ char	*get_next_line(int fd)
 	{
 		control.head = calloc(sizeof(t_node *), 1);
 	}
-	while (!check_for_newline(control.head))
+	while (find_next_newline(control.head) < 0)
 	{
 	node_recent_read = new_data_node();
 	node_recent_read->content[read(fd, node_recent_read->content, BUFFER_SIZE)] = '\0';
 	node_addback(control.head, node_recent_read);
+	control.number_of_bfnodes++;
 	}
+	//chamar funcao para retornar string até aqui. gravar estado para proxima run.
 	return NULL;
 }
 
